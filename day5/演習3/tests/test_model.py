@@ -5,6 +5,7 @@ import numpy as np
 import pickle
 import time
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn.impute import SimpleImputer
@@ -171,3 +172,48 @@ def test_model_reproducibility(sample_data, preprocessor):
     assert np.array_equal(
         predictions1, predictions2
     ), "モデルの予測結果に再現性がありません"
+
+
+def test_training_data_size(sample_data):
+    """訓練データが十分にあるか確認"""
+    # データの分割
+    X = sample_data.drop("Survived", axis=1)
+    y = sample_data["Survived"].astype(int)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
+
+    assert len(X_train) >= 500, f"訓練データのサイズが500未満です: {len(X_train)}"
+
+
+
+
+def test_compare_model_accuracy(sample_data, preprocessor):
+    """他の機械学習モデルとRandomForestの精度を比較"""
+    X = sample_data.drop("Survived", axis=1)
+    y = sample_data["Survived"].astype(int)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
+
+    rf_model = Pipeline(
+        steps=[
+            ("preprocessor", preprocessor),
+            ("classifier", RandomForestClassifier(n_estimators=100, random_state=42)),
+        ]
+    )
+    rf_model.fit(X_train, y_train)
+    rf_accuracy = accuracy_score(y_test, rf_model.predict(X_test))
+    print(f"RandomForestの精度: {rf_accuracy:.4f}")
+
+    lr_model = Pipeline(
+        steps=[
+            ("preprocessor", preprocessor),
+            ("classifier", LogisticRegression(solver='liblinear', random_state=42)),
+        ]
+    )
+    lr_model.fit(X_train, y_train)
+    lr_accuracy = accuracy_score(y_test, lr_model.predict(X_test))
+
+
+    assert rf_accuracy >= lr_accuracy, f"RFの方が精度が良好: {rf_accuracy},{lr_accuracy}"
