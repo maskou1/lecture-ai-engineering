@@ -186,8 +186,6 @@ def test_training_data_size(sample_data):
     assert len(X_train) >= 500, f"訓練データのサイズが500未満です: {len(X_train)}"
 
 
-
-
 def test_compare_model_accuracy(sample_data, preprocessor):
     """他の機械学習モデルとRandomForestの精度を比較"""
     X = sample_data.drop("Survived", axis=1)
@@ -209,11 +207,12 @@ def test_compare_model_accuracy(sample_data, preprocessor):
     lr_model = Pipeline(
         steps=[
             ("preprocessor", preprocessor),
-            ("classifier", LogisticRegression(solver='liblinear', random_state=42)),
+            ("classifier", LogisticRegression(solver="liblinear", random_state=42)),
         ]
     )
     lr_model.fit(X_train, y_train)
     lr_accuracy = accuracy_score(y_test, lr_model.predict(X_test))
 
-
-    assert rf_accuracy >= lr_accuracy, f"RFの方が精度が良好: {rf_accuracy},{lr_accuracy}"
+    assert (
+        rf_accuracy >= lr_accuracy
+    ), f"RFの方が精度が良好: {rf_accuracy},{lr_accuracy}"
